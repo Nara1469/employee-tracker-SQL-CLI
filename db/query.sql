@@ -1,9 +1,29 @@
+-- SELECT 
+--   employees.id,
+--   department.id AS id, 
+--   department.department_name AS department, 
+--   role.title AS title,  
+--   role.salary AS salary
+-- FROM employees 
+-- JOIN role 
+-- ON employees.role_id = role.id 
+-- JOIN department
+-- ON role.department_id = department.id
+-- ORDER BY department.id;
+
+SELECT DISTINCT id, CONCAT(first_name, ' ', last_name) AS manager
+                FROM employees 
+                WHERE manager_id IS NULL
+                ORDER BY id;
+
+-- SELECT id, CONCAT(first_name, ' ', last_name) AS person FROM employees ORDER BY id;
+
 -- Manager's Table
-SELECT DISTINCT e.manager_id AS id, CONCAT(m.first_name, ' ', m.last_name) AS manager
-FROM employees e
-LEFT JOIN employees m
-ON e.manager_id = m.id
-ORDER BY e.manager_id;
+-- SELECT DISTINCT e.manager_id AS id, CONCAT(m.first_name, ' ', m.last_name) AS manager
+-- FROM employees e
+-- LEFT JOIN employees m
+-- ON e.manager_id = m.id
+-- ORDER BY e.manager_id;
 
 -- INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?);
 
