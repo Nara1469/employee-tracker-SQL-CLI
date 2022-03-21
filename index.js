@@ -6,10 +6,8 @@ const mysql = require("mysql2");
 const db = mysql.createConnection(
   {
     host: "localhost",
-    // MySQL username,
     user: "root",
-    // TODO: Add MySQL password here
-    password: "Ulaanbaatar2!",
+    password: "schoolroot",
     database: 'employees_db',
   },
   // console.log(`Connected to the employees_db database.`)
@@ -17,9 +15,10 @@ const db = mysql.createConnection(
 
 // Add an employee
 function addEmployee() {
-  let sql = "SELECT title FROM role ORDER BY role.id";
+  let sqlRole = "SELECT id, title FROM role ORDER BY role.id";
   let roleArray = [];
-  db.query(sql, (err, rows) => {
+  let roleTable = [];
+  db.query(sqlRole, (err, rows) => {
     if (err) {
       console.log("Error message!");
       return;
@@ -27,20 +26,33 @@ function addEmployee() {
     for (let i = 0; i < rows.length; i++) {
       let element = rows[i].title;
       roleArray.push(element);
+      roleTable.push(rows[i]);
     }
   });
-  sql = "SELECT COUNT(manager_id) FROM employees WHERE manager_id != NULL ORDER BY manager.id";
+  sqlManager = `SELECT DISTINCT e.manager_id AS id, 
+                CONCAT(m.first_name, ' ', m.last_name) AS manager
+                FROM employees e
+                LEFT JOIN employees m
+                ON e.manager_id = m.id
+                ORDER BY e.manager_id`;
   let managerArray = [];
-  db.query(sql, (err, rows) => {
+  let managerTable = [];
+  db.query(sqlManager, (err, rows) => {
     if (err) {
       console.log("Error message!");
       return;
     }
-    console.log(rows);
-    // for (let i = 0; i < rows.length; i++) {
-    //   let element = rows[i].title;
-    //   managerArray.push(element);
-    // }
+    for (let i = 0; i < rows.length; i++) {
+      let element = rows[i].manager;
+      console.log(element);
+      if (element == null) {
+        managerArray.push("None");
+        managerTable.push({id: 0, manager: null});
+      } else {
+        managerArray.push(element);
+        managerTable.push(rows[i]);
+      }
+    }
   });
   inquirer.prompt([
     {
@@ -61,20 +73,109 @@ function addEmployee() {
     },
     {
       type: "list",
-      name: "manager",
+      name: "manager_name",
       message: "Who is the employee's manager?",
       choices: managerArray
     }])
-    .then(function ({ firstName, lastName, role, manager }) {
+    .then(function ({ firstName, lastName, role, manager_name }) {
+      let role_id = 0;
+      for (let i = 0; i < roleTable.length; i++) {
+        if (roleTable[i].title === role) {
+          role_id = roleTable[i].id;
+        }
+      }
+      // console.log(`role_id: ${role_id}`);
+      let manager_id = 0;
+      for (let i = 0; i < managerTable.length; i++) {
+        if (managerTable[i].manager === manager_name) {
+          manager_id = managerTable[i].id;
+        }
+      }
+      // console.log(`manager_id: ${manager_id}`);
       sql = `INSERT INTO employees (first_name, last_name, role_id, manager_id) 
             VALUES (?, ?, ?, ?);`;
-      const params = [firstName, lastName, role, manager];
+      const params = [firstName, lastName, role_id, manager_id];
       db.query(sql, params, (err, result) => {
         if (err) {
-          res.status(400).json({ error: err.message });
+          console.log("Error message!");
           return;
         }
        console.log(`Added ${firstName} ${lastName} to the Database`);
+      });
+    });
+  return;
+}
+
+// Add a new role
+function addRole() {
+  let sqlDepartment = "SELECT id, department_name FROM department ORDER BY department.id";
+  let departmentArray = [];
+  let departmentTable = [];
+  db.query(sqlDepartment, (err, rows) => {
+    if (err) {
+      console.log("Error message!");
+      return;
+    }
+    for (let i = 0; i < rows.length; i++) {
+      let element = rows[i].department_name;
+      departmentArray.push(element);
+      departmentTable.push(rows[i]);
+    }
+  });
+  inquirer.prompt([
+    {
+      type: "input",
+      name: "title",
+      message: "What is the name of the role?",
+    },
+    {
+      type: "input",
+      name: "salary",
+      message: "What is the salary of the role?",
+    },
+    {
+      type: "list",
+      name: "department",
+      message: "Which department does the role belong to?",
+      choices: departmentArray
+    }])
+    .then(function ({ title, salary, department }) {
+      let department_id = 0;
+      for (let i = 0; i < departmentTable.length; i++) {
+        if (departmentTable[i].department_name === department) {
+          department_id = departmentTable[i].id;
+        }
+      }
+      sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?);`;
+      const params = [title, salary, department_id];
+      db.query(sql, params, (err, result) => {
+        if (err) {
+          console.log("Error message!");
+          return;
+        }
+       console.log(`Added ${title} to the Database`);
+      });
+    });
+  return;
+}
+
+// Add a new department
+function addDepartment() {
+  inquirer.prompt([
+    {
+      type: "input",
+      name: "department",
+      message: "What is the name of the department?",
+    }])
+    .then(function ({ department }) {
+      sql = `INSERT INTO department (department_name) VALUES (?);`;
+      const params = [department];
+      db.query(sql, params, (err, result) => {
+        if (err) {
+          console.log("Error message!");
+          return;
+        }
+       console.log(`Added ${department} to the Database`);
       });
     });
   return;
@@ -85,10 +186,24 @@ function viewTable(view_choice) {
   let sql = "";
   switch (view_choice) {
     case "View All Employees": 
-      sql = "SELECT employees.id AS id, employees.first_name AS first_name, employees.last_name AS last_name, role.title AS title, role.salary AS salary, role.department_id AS department, employees.manager_id AS manager FROM employees JOIN role ON employees.role_id = role.id ORDER BY employees.id";
+      sql = `SELECT e.id AS id, e.first_name AS first_name, e.last_name AS last_name, 
+            role.title AS title, department.department_name AS department, 
+            role.salary AS salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
+            FROM employees e
+            LEFT JOIN employees m
+            ON e.manager_id = m.id 
+            JOIN role 
+            ON e.role_id = role.id 
+            JOIN department
+            ON role.department_id = department.id
+            ORDER BY e.id;`;
       break;
     case "View All Roles": 
-      sql = `SELECT role.id AS id, role.title AS title, department.department_name AS department, role.salary AS salary FROM role JOIN department ON role.department_id = department.id ORDER BY role.id`;
+      sql = `SELECT role.id AS id, role.title AS title, 
+            department.department_name AS department, role.salary AS salary 
+            FROM role JOIN department 
+            ON role.department_id = department.id 
+            ORDER BY role.id`;
       break;
     case "View All Departments": 
       sql = `SELECT * FROM department ORDER BY department.id`;
@@ -103,18 +218,17 @@ function viewTable(view_choice) {
     }
     console.table(rows);
   });
-  return;
 }
 
 // Create Main Menu 
 const callMainMenu = function () {
-  let choice = "";
   inquirer.prompt([
     {
       type: "list",
       name: "menu",
       message: 'What would you like to do?',
-      choices: ["View All Employees",
+      choices: [
+        "View All Employees",
         "Add Employee",
         "Update Employee Role",
         "View All Roles",
@@ -145,8 +259,17 @@ const callMainMenu = function () {
           addEmployee();
           break;
         }
+        case "Add Role": {
+          addRole();
+          break;
+        }
+        case "Add Department": {
+          addDepartment();
+          break;
+        }
         case "Quit": {
           console.log("Goodbye!");
+          process.exit(0);
           break;
         }
         default:
