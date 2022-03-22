@@ -179,7 +179,7 @@ function addDepartment() {
   return;
 }
 
-// Update an employee Role
+// Update an Employee Role
 function updateRole() {
   // Creating choice array for employeeArray inquirer question
   sqlEmployee = `SELECT id, CONCAT(first_name, ' ', last_name) AS person FROM employees ORDER BY id`;
@@ -250,7 +250,7 @@ function updateRole() {
   });
 }
 
-// Update an employee Manager
+// Update an Employee Manager
 function updateManager() {
   // Creating choice array for employeeArray inquirer question
   sqlEmployee = `SELECT id, CONCAT(first_name, ' ', last_name) AS person FROM employees ORDER BY id`;
@@ -267,11 +267,7 @@ function updateManager() {
       employeeTable.push(rows[i]);
     }
     // Creating choice array for managerArray inquirer question
-    sqlManager = `SELECT id, 
-        CONCAT(first_name, ' ', last_name) AS manager
-        FROM employees 
-        WHERE manager_id IS NULL
-        ORDER BY id`;
+    sqlManager = `SELECT id, CONCAT(first_name, ' ', last_name) AS manager FROM employees WHERE manager_id IS NULL ORDER BY id`;
     let managerArray = ["None"];
     let managerTable = [{ id: null, manager: null }];
     db.query(sqlManager, (err, rows) => {
@@ -318,7 +314,7 @@ function updateManager() {
             console.log("Error message!");
             return;
           }
-          console.log(`Updated ${person}'s Manager is changed`);
+          console.log(`\nUpdated ${person}'s Manager is changed\n`);
           callMainMenu();
         });
       });
@@ -368,7 +364,7 @@ function deleteEmployeeRecord() {
                   console.log("Error message!");
                   return;
                 }
-                console.log(`An employee's record with id=${id} is deleted from database!`);
+                console.log(`\nAn employee's record with id=${id} is deleted from database!\n`);
                 callMainMenu();
               });
             } else {
@@ -381,32 +377,27 @@ function deleteEmployeeRecord() {
   return;
 }
 
-// View any table with choice of Employees, Role and Department table
+// View any table with choice of Employees, Role, Department, Employees By Manager, Employees By Deapartment and Department By Budget
 function viewTable(view_choice) {
   let sql = "";
   switch (view_choice) {
     case "View All Employees":
-      sql = `SELECT e.id AS id, e.first_name AS first_name, e.last_name AS last_name, 
-            role.title AS title, department.department_name AS department, 
-            role.salary AS salary, CONCAT(m.first_name, ' ', m.last_name) AS manager
-            FROM employees e
-            LEFT JOIN employees m
-            ON e.manager_id = m.id 
-            JOIN role 
-            ON e.role_id = role.id 
-            JOIN department
-            ON role.department_id = department.id
-            ORDER BY e.id;`;
+      sql = `SELECT e.id AS id, e.first_name AS first_name, e.last_name AS last_name, role.title AS title, department.department_name AS department, role.salary AS salary, CONCAT(m.first_name, ' ', m.last_name) AS manager FROM employees e LEFT JOIN employees m ON e.manager_id = m.id  JOIN role ON e.role_id = role.id JOIN department ON role.department_id = department.id ORDER BY e.id;`;
       break;
     case "View All Roles":
-      sql = `SELECT role.id AS id, role.title AS title, 
-            department.department_name AS department, role.salary AS salary 
-            FROM role JOIN department 
-            ON role.department_id = department.id 
-            ORDER BY role.id`;
+      sql = `SELECT role.id AS id, role.title AS title, department.department_name AS department, role.salary AS salary FROM role JOIN department ON role.department_id = department.id ORDER BY role.id;`;
       break;
     case "View All Departments":
-      sql = `SELECT * FROM department ORDER BY department.id`;
+      sql = `SELECT * FROM department ORDER BY department.id;`;
+      break;
+    case "View Employees By Manager":
+      sql = `SELECT department.id AS d_id, department.department_name AS department, m.id AS m_id, CONCAT(m.first_name, ' ', m.last_name) AS manager, e.id AS e_id, CONCAT(e.first_name, ' ', e.last_name) AS employee, role.title, role.salary FROM employees e LEFT JOIN employees m ON e.manager_id = m.id JOIN role ON e.role_id = role.id JOIN department ON role.department_id = department.id WHERE e.manager_id IS NOT NULL ORDER BY e.manager_id;`;
+      break;
+    case "View Employees By Department":
+      sql = `SELECT department.id AS d_id, department.department_name AS department, e.id AS e_id, CONCAT(e.first_name, ' ', e.last_name) AS employee, role.title, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager FROM employees e LEFT JOIN employees m ON e.manager_id = m.id JOIN role ON e.role_id = role.id JOIN department ON role.department_id = department.id ORDER BY department.id;`;
+      break;
+    case "View Department By Budget":
+      sql = `SELECT department.id AS id, department.department_name AS department, SUM(role.salary) AS budget FROM employees JOIN role ON employees.role_id = role.id JOIN department ON role.department_id = department.id GROUP BY department.id ORDER BY department.id;`;
       break;
     default:
       break;
@@ -438,56 +429,52 @@ const callMainMenu = function () {
         "Update Employee Role",
         "Update Employee Manager",
         "Delete Employee",
+        "Delete Role",
+        "Delete Department",
+        "View Employees By Manager",
+        "View Employees By Department",
+        "View Department By Budget",
         "Quit",
       ]
     }
   ])
     .then(function ({ menu }) {
-      choice = menu;
-      switch (menu) {
-        case "View All Employees": {
-          viewTable(menu);
-          break;
+      if (menu.includes("View")) {
+        viewTable(menu);
+      } else {
+        switch (menu) {
+          case "Add Employee": {
+            addEmployee();
+            break;
+          }
+          case "Add Role": {
+            addRole();
+            break;
+          }
+          case "Add Department": {
+            addDepartment();
+            break;
+          }
+          case "Update Employee Role": {
+            updateRole();
+            break;
+          }
+          case "Update Employee Manager": {
+            updateManager();
+            break;
+          }
+          case "Delete Employee": {
+            deleteEmployeeRecord();
+            break;
+          }
+          case "Quit": {
+            console.log("Goodbye!");
+            process.exit(0);
+            break;
+          }
+          default:
+            break;
         }
-        case "View All Roles": {
-          viewTable(menu);
-          break;
-        }
-        case "View All Departments": {
-          viewTable(menu);
-          break;
-        }
-        case "Add Employee": {
-          addEmployee();
-          break;
-        }
-        case "Add Role": {
-          addRole();
-          break;
-        }
-        case "Add Department": {
-          addDepartment();
-          break;
-        }
-        case "Update Employee Role": {
-          updateRole();
-          break;
-        }
-        case "Update Employee Manager": {
-          updateManager();
-          break;
-        }
-        case "Delete Employee": {
-          deleteEmployeeRecord();
-          break;
-        }
-        case "Quit": {
-          console.log("Goodbye!");
-          process.exit(0);
-          break;
-        }
-        default:
-          break;
       }
     });
   return;
