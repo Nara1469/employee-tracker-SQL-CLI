@@ -1,6 +1,24 @@
 -- Add a new Employee
 INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?);
 
+-- Getting one role record
+SELECT role.id, role.title, department.department_name, role.salary
+FROM role 
+JOIN department 
+ON role.department_id = department.id 
+WHERE role.id = 2;
+
+-- Getting one employee record 
+SELECT e.id AS id, e.first_name AS first_name, e.last_name AS last_name, role.title AS title, department.department_name AS department, role.salary AS salary, CONCAT(m.first_name, ' ', m.last_name) AS manager 
+FROM employees e 
+LEFT JOIN employees m 
+ON e.manager_id = m.id 
+JOIN role 
+ON e.role_id = role.id 
+JOIN department 
+ON role.department_id = department.id 
+WHERE e.id = 2;
+
 -- View Employees By Manager
 SELECT 
   department.id AS d_id,
