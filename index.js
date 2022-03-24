@@ -422,7 +422,7 @@ function viewTable(viewChoice) {
     case "View Employees By Department":
       sql = `SELECT department.id AS d_id, department.department_name AS department, e.id AS e_id, CONCAT(e.first_name, ' ', e.last_name) AS employee, role.title, role.salary, CONCAT(m.first_name, ' ', m.last_name) AS manager FROM employees e LEFT JOIN employees m ON e.manager_id = m.id JOIN role ON e.role_id = role.id JOIN department ON role.department_id = department.id ORDER BY department.id;`;
       break;
-    case "View Department By Budget":
+    case "View Departments By Budget":
       sql = `SELECT department.id AS id, department.department_name AS department, SUM(role.salary) AS budget FROM employees JOIN role ON employees.role_id = role.id JOIN department ON role.department_id = department.id GROUP BY department.id ORDER BY department.id;`;
       break;
     default:
@@ -459,7 +459,7 @@ const callMainMenu = function () {
         "Delete Department",
         "View Employees By Manager",
         "View Employees By Department",
-        "View Department By Budget",
+        "View Departments By Budget",
         "Quit",
       ]
     }

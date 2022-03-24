@@ -41,15 +41,6 @@ First clone the repository then run the following command at the root directory 
 ```
 npm i
 ```
-
-Before run the application run by using the following command:
-    
-```
-mysql -u root -p // with password
-source db/schema.sql
-source db/seeds.sql
-quit
-```
     
 The application will be invoked by using the following command:
     
@@ -57,15 +48,24 @@ The application will be invoked by using the following command:
 node index.js
 ```
 
+For the testing purpose it is helpful to run these commands to create and seed a  database:
+    
+```
+mysql -u root -p // with password
+source db/schema.sql
+source db/seeds.sql
+quit
+```
+
 ## Database Structure
 
-The database name: `employees_db`. In the `employees_db`, there are 3 tables: `employees`, `role` and `department`. All database related files are in the `db` directory: `schema.sql`, `seeds.sql`, `query.sql` and `test.sql` files to pre-populate the database and used during the development.
+The database name: `employees_db`. All database related files are in the `db` directory: `schema.sql`, `seeds.sql`, `query.sql`, and `test.sql` files to pre-populate the database and used during the development.
 
 The database structure is shown in the following image:
 
 ![Database includes tables labeled “employees,” role,” and “department.”](./Assets/12-sql-homework-demo-01.png)
 
-As the image illustrates, schema.sql contains the following three tables:
+As the image illustrates, the `employees_db` database contains the following three tables:
 
 * `department`
 
@@ -97,32 +97,47 @@ As the image illustrates, schema.sql contains the following three tables:
 
 ## My Solution
 
-GIVEN a command-line application that accepts user input
-WHEN I start the application
-THEN I am presented with the following options: view all departments, view all roles, view all employees, add a department, add a role, add an employee, and update an employee role
-WHEN I choose to view all departments
-THEN I am presented with a formatted table showing department names and department ids
-WHEN I choose to view all roles
-THEN I am presented with the job title, role id, the department that role belongs to, and the salary for that role
-WHEN I choose to view all employees
-THEN I am presented with a formatted table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
-WHEN I choose to add a department
-THEN I am prompted to enter the name of the department and that department is added to the database
-WHEN I choose to add a role
-THEN I am prompted to enter the name, salary, and department for the role and that role is added to the database
-WHEN I choose to add an employee
-THEN I am prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
-WHEN I choose to update an employee role
-THEN I am prompted to select an employee to update and their new role and this information is updated in the database 
+This command-line application starts with a choice of a list which is called `Main Menu` with the following options: 
+
+- "View All Employees"
+- "View All Roles"
+- "View All Departments"
+- "Add Employee"
+- "Add Role"
+- "Add Department"
+- "Update Employee Role"
+- "Update Employee Manager"
+- "Delete Employee"
+- "Delete Role"
+- "Delete Department"
+- "View Employees By Role"
+- "View Employees By Manager"
+- "View Departments By Budget"
+- "Quit"
+
+A user able to do the "view", "add", "update" and "delete" operations in all 3 tables:
+- department
+- role
+- employees
+
+Also any of these functions are done, the user goes back to `Main Menu`.
+
+All view table operations are done in one function the choice of the user selection. And prints results on screen with a help of `console.table` package. /viewTable()/
+
+To add a record in a table, inputs are different depending on a table. So 3 separate functions are used. Some inputs are needed an array of choices  dynamically created from the database. It was the challenging part of this task. After the user made choice from the array, the app needs to find the chosen input's PRIMARY KEY id from the table and send it to the query. Then the app needs to do the real operation. /addDepartment(), addRole() and addEmployee()/
+
+To update the Employee table, 2 separate functions are used. Similarly, the choice of role and manager's list array is dynamically created from the database.  After the user made choice from the array, the app needs to find the chosen input's PRIMARY KEY id from the table and send it to the query. /updateRole() and updateManager()/ 
+
+All delete operations are done in one function the choice of the table selection. And prints results on screen with a help of `console.table` package. The user needs to enter an "id" number of a record that needs to be deleted. First, find the deleting record from the table and print that record on the screen. Then I added a confirm question before delete. So always asks "Do you still want to delete this record?". If the parent table record is deleted, the child table records are deleted on CASCADE effect (ON DELETE CASCADE - schema.sql). If a  manager's record is deleted from the Employees table, all the employee's manager_id is changed to NULL (ON DELETE SET NULL - schema.sql). /deleteRecord()/
 
 This application functionality will look like in the following way:
 
 ```
 init()      // runs the application
 |
-callMainMenu()
+callMainMenu()  // Main menu
 |
-├── viewTables()  
+├── viewTables(choice)         // all view table queries used in this function
 │   ├── "View All Employees"               
 │   ├── "View All Roles"               
 │   ├── "View All Departments"               
@@ -132,7 +147,7 @@ callMainMenu()
 ├── addEmployee() --- "Add Employee"          
 ├── addRole() ------- "Add Role"                  
 ├── addDepartment() - "Add Deapartment"          
-├── deleteRecord()
+├── deleteRecord(choice)       // all delete one record from any table called in this function
 │   ├── "Delete Department"              
 │   ├── "Delete Role"            
 │   └── "Delete Employee"      
@@ -141,7 +156,7 @@ callMainMenu()
 └──"Quit"    // exit from the application
 ```
 
-> **Note**: All the additional bonus functionalities was done. 
+> **Note**: All the additional bonus functionalities were done. 
 
 * Update employee managers.
 
