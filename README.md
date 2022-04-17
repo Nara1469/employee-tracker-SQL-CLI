@@ -170,6 +170,8 @@ callMainMenu()  // Main menu
 
 ## Walkthrough Video
 
-A walkthrough video that demonstrates the functionality of the employee tracker. [Walkthrough Video - on Youtube](https://youtu.be/yWx5P_RQEBs)
+A walkthrough video that demonstrates the functionality of the employee tracker.
+- Almost all function's functionality in the video [Walkthrough Video - on Youtube](https://youtu.be/yWx5P_RQEBs)
+- Some missing functions added in the video [Walkthrough Video - on Youtube](https://youtu.be/1nJdGciMJEk)
 
 If you have any questions about the repo, open an issue or contact me directly at naraamtm@gmail.com. Here is a link to this application repo on [Github](https://github.com/Nara1469/employee-tracker-SQL-CLI).
